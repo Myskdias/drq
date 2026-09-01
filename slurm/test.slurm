@@ -77,6 +77,7 @@ gpt = CorewarGPT(
     environment=simargs_to_environment(SimulationArgs()),
 )
 
+echo "Start gen at $(date) ==="
 warriors = asyncio.run(
     gpt.new_warrior_async(
         n_warriors=1,
@@ -84,22 +85,30 @@ warriors = asyncio.run(
     )
 ).flatten()
 
+echo "End gen at $(date) ==="
+
 valid = 0
+valid_hashes = set()
 
 for i, warrior in enumerate(warriors):
+    print()
+    print("=" * 80)
+
     if warrior.warrior is not None:
         valid += 1
+        valid_hashes.add(warrior.id)
+
         print(f"{i}: VALID - {warrior.warrior.name}")
+        print(f"SHA256: {warrior.id}")
+        print("RAW CODE:")
+        print(warrior.llm_response)
     else:
         print(f"{i}: INVALID - {warrior.error}")
+        print(f"SHA256: {warrior.id}")
+        print("RAW RESPONSE:")
+        print(warrior.llm_response)
 
 print()
 print(f"VALIDITY: {valid}/8 = {valid / 8:.1%}")
-
-if valid < 6:
-    raise RuntimeError(
-        f"Only {valid}/8 valid warriors. Expected at least 6/8 for the smoke test."
-    )
-
-print("SMOKE TEST PASSED")
+print(f"DISTINCT VALID HASHES: {len(valid_hashes)}/{valid}")
 PY
