@@ -23,10 +23,13 @@ class GPTWarrior:
 
 
 class CorewarGPT():
-    def __init__(self, model, system_prompt, new_warrior_prompt, mutate_warrior_prompt, temperature=1., environment=None):
+    def __init__(self, model, system_prompt, new_warrior_prompt, mutate_warrior_prompt,
+                 temperature=1., environment=None, seed=0, base_url=None):
         self.new_warrior_prompt = new_warrior_prompt
         self.mutate_warrior_prompt = mutate_warrior_prompt
-        self.gpt = GPT(model=model, system_prompt=system_prompt, temperature=temperature)
+        self.seed = seed
+        self.gpt = GPT(model=model, system_prompt=system_prompt, temperature=temperature,
+                       seed=seed, base_url=base_url)
         self.environment = environment
         self.all_generations = [] # list of tuples of (generation_type, gpt_warriors)
 
@@ -44,7 +47,10 @@ class CorewarGPT():
 
     async def new_warrior_async(self, n_warriors=1, n_responses=1):
         prompts = [self.new_warrior_prompt for _ in range(n_warriors)]
-        llm_responses = await self.gpt.get_multiple_completions_async(prompts, n_responses=n_responses) # list of list of strs
+        generation_seed = self.seed + len(self.all_generations)
+        llm_responses = await self.gpt.get_multiple_completions_async(
+            prompts, n_responses=n_responses, seed=generation_seed
+        ) # list of list of strs
         gpt_warriors = [[None for _ in range(n_responses)] for _ in range(n_warriors)]
         for i_warrior in range(n_warriors):
             for i_response in range(n_responses):
@@ -56,7 +62,10 @@ class CorewarGPT():
     async def mutate_warrior_async(self, gpt_warriors, n_responses=1):
         old_gpt_warriors = gpt_warriors
         prompts = [f"{self.mutate_warrior_prompt}\n\n\n{gpt_warrior.llm_response}" for gpt_warrior in old_gpt_warriors]
-        llm_responses = await self.gpt.get_multiple_completions_async(prompts, n_responses=n_responses) # list of list of strs
+        generation_seed = self.seed + len(self.all_generations)
+        llm_responses = await self.gpt.get_multiple_completions_async(
+            prompts, n_responses=n_responses, seed=generation_seed
+        ) # list of list of strs
         gpt_warriors = [[None for _ in range(n_responses)] for _ in range(len(llm_responses))]
         for i_warrior in range(len(llm_responses)):
             for i_response in range(n_responses):

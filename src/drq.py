@@ -33,6 +33,7 @@ class Args:
     # Core War arguments
     simargs: SimulationArgs = field(default_factory=SimulationArgs) # Simulation arguments
     timeout: int = 900 # timeout for each simulation in seconds
+    simulation_seed_offset: int = 0 # optional offset for reproducible root-specific placement seeds
 
     # DRQ arguments
     initial_opps: list[str] = field(default_factory=list) # list of initial opponents
@@ -53,6 +54,8 @@ class Args:
     # LLM arguments
     gpt_model: str = "gpt-4.1-mini-2025-04-14" # The GPT model to use
     temperature: float = 1.0
+    llm_seed: int = 0
+    llm_base_url: str | None = None # OpenAI-compatible local endpoint, e.g. vLLM
     system_prompt: str = os.path.expanduser("./prompts/system_prompt_0.txt")
     new_prompt: str = os.path.expanduser("./prompts/new_prompt_0.txt")
     mutate_prompt: str = os.path.expanduser("./prompts/mutate_prompt_0.txt")
@@ -110,7 +113,8 @@ class Main:
             # task_crossover_warrior = f.read()
 
         self.corewar_gpt = CorewarGPT(args.gpt_model, system_prompt, new_warrior_prompt, mutate_warrior_prompt,
-                                      temperature=args.temperature, environment=simargs_to_environment(args.simargs))
+                                      temperature=args.temperature, environment=simargs_to_environment(args.simargs),
+                                      seed=args.llm_seed, base_url=args.llm_base_url)
 
         self.init_opps = []
         for file in args.initial_opps:
@@ -176,7 +180,10 @@ class Main:
         else:
             opps = self.init_opps + prev_champs
             warriors = [w.warrior for w in [gpt_warrior, *opps]]
-            outputs = run_multiple_rounds(self.args.simargs, warriors, n_processes=self.args.n_processes, timeout=self.args.timeout)
+            seeds = range(self.args.simulation_seed_offset,
+                          self.args.simulation_seed_offset + self.args.simargs.rounds)
+            outputs = run_multiple_rounds(self.args.simargs, warriors, n_processes=self.args.n_processes,
+                                           timeout=self.args.timeout, seeds=seeds)
             if outputs is None:
                 gpt_warrior.bc, gpt_warrior.fitness = None, -np.inf
             else:

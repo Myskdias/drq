@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 import random
 import numpy as np
-from functools import partial
 from tqdm import tqdm
 from multiprocessing import Pool
 
@@ -82,19 +81,32 @@ def run_single_round(simargs, warriors, seed, pbar=False):
     outputs = dict(score=score, alive_score=alive_score, total_spawned_procs=total_spawned_procs, memory_coverage=memory_coverage)
     return outputs
 
-def run_multiple_rounds(simargs, warriors, n_processes=1, timeout=900):
+def _run_battle_task(task):
+    simargs, warriors, seed = task
+    return run_single_round(simargs, warriors, seed)
+
+def run_battle_batch(simargs, battles, seeds, n_processes=1, timeout=900):
+    seeds = list(seeds)
+    tasks = [(simargs, warriors, seed) for warriors in battles for seed in seeds]
+    with Pool(processes=n_processes) as pool:
+        result = pool.map_async(_run_battle_task, tasks)
+        outputs = result.get(timeout=timeout)
+
+    grouped = []
+    for i in range(len(battles)):
+        battle_outputs = outputs[i * len(seeds):(i + 1) * len(seeds)]
+        grouped.append({
+            key: np.stack([output[key] for output in battle_outputs], axis=-1)
+            for key in battle_outputs[0].keys()
+        })
+    return grouped
+
+def run_multiple_rounds(simargs, warriors, n_processes=1, timeout=900, seeds=None):
     try:
-        run_single_round_fn = partial(run_single_round, simargs, warriors)
-        seeds = list(range(simargs.rounds))
-        # print("Launching pool")
-        with Pool(processes=n_processes) as pool:
-            # outputs = pool.map(run_single_round_fn, seeds)
-            result = pool.map_async(run_single_round_fn, seeds)
-            # print("Blocking and waiting for results")
-            outputs = result.get(timeout=timeout)  # Timeout in seconds
-        outputs = {k: np.stack([o[k] for o in outputs], axis=-1) for k in outputs[0].keys()}
-        # print("Got results!")
-        return outputs # shape: (len(warriors), simargs.rounds)
+        seeds = list(range(simargs.rounds)) if seeds is None else list(seeds)
+        return run_battle_batch(
+            simargs, [warriors], seeds, n_processes=n_processes, timeout=timeout
+        )[0]
     except Exception as e:
         print(e)
         return None
