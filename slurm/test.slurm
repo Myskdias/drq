@@ -77,15 +77,13 @@ gpt = CorewarGPT(
     environment=simargs_to_environment(SimulationArgs()),
 )
 
-echo "Start gen at $(date) ==="
+
 warriors = asyncio.run(
     gpt.new_warrior_async(
         n_warriors=1,
         n_responses=8,
     )
 ).flatten()
-
-echo "End gen at $(date) ==="
 
 valid = 0
 valid_hashes = set()
