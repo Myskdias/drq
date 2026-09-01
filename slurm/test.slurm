@@ -41,33 +41,18 @@ export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 
 cd "$REPO_PATH/src"
 
-echo "===== NODE ====="
-hostname
-nvidia-smi
-
-echo
-echo "===== PYTORCH ====="
-python - <<'PY'
-import torch
-
-print("torch:", torch.__version__)
-print("CUDA available:", torch.cuda.is_available())
-
-if not torch.cuda.is_available():
-    raise RuntimeError("CUDA is not available")
-
-print("GPU:", torch.cuda.get_device_name(0))
-PY
-
 echo
 echo "===== QWEN / REDCODE SMOKE TEST ====="
 
-MODEL_PATH="$MODEL_PATH" python - <<'PY'
+export MODEL_PATH
+
+python - <<'PY'
 import asyncio
 import os
 
 from corewar_util import SimulationArgs, simargs_to_environment
 from llm_corewar import CorewarGPT
+
 
 model_path = os.environ["MODEL_PATH"]
 
@@ -107,7 +92,8 @@ for i, warrior in enumerate(warriors):
         print(f"{i}: VALID - {warrior.warrior.name}")
     else:
         print(f"{i}: INVALID - {warrior.error}")
-  print()
+
+print()
 print(f"VALIDITY: {valid}/8 = {valid / 8:.1%}")
 
 if valid < 6:
