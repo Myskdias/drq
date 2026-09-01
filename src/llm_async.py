@@ -57,6 +57,9 @@ class GPT:
         self.hf_model.eval()
 
     def _get_huggingface_completion(self, prompt, n_responses, seed):
+        if n_responses <= 0:
+            return []
+
         messages = [
             {"role": "system", "content": self.system_prompt},
             {"role": "user", "content": prompt},
@@ -76,21 +79,25 @@ class GPT:
         }
         if self.temperature > 0:
             generation_kwargs["temperature"] = self.temperature
+            generation_kwargs["num_return_sequences"] = n_responses
+        elif n_responses > 1:
+            inputs = {
+                name: value.repeat_interleave(n_responses, dim=0)
+                for name, value in inputs.items()
+            }
 
-        responses = []
         with self.torch.random.fork_rng(devices=[self.hf_model.device.index]):
             self.torch.manual_seed(seed)
-            for _ in range(n_responses):
-                with self.torch.inference_mode():
-                    output = self.hf_model.generate(
-                        **inputs,
-                        **generation_kwargs,
-                    )
-                responses.append(self.tokenizer.decode(
-                    output[0, input_length:],
-                    skip_special_tokens=True,
-                ))
-        return responses
+            with self.torch.inference_mode():
+                outputs = self.hf_model.generate(
+                    **inputs,
+                    **generation_kwargs,
+                )
+
+        return self.tokenizer.batch_decode(
+            outputs[:, input_length:],
+            skip_special_tokens=True,
+        )
 
     @backoff.on_exception(backoff.expo, (openai.RateLimitError, openai.APITimeoutError, openai.PermissionDeniedError))
     async def get_completion_async(self, prompt, n_responses=1, seed=None):
