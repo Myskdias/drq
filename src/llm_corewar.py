@@ -24,12 +24,14 @@ class GPTWarrior:
 
 class CorewarGPT():
     def __init__(self, model, system_prompt, new_warrior_prompt, mutate_warrior_prompt,
-                 temperature=1., environment=None, seed=0, base_url=None):
+                 temperature=1., environment=None, seed=0, base_url=None,
+                 backend="openai", max_new_tokens=4096):
         self.new_warrior_prompt = new_warrior_prompt
         self.mutate_warrior_prompt = mutate_warrior_prompt
         self.seed = seed
         self.gpt = GPT(model=model, system_prompt=system_prompt, temperature=temperature,
-                       seed=seed, base_url=base_url)
+                       seed=seed, base_url=base_url, backend=backend,
+                       max_new_tokens=max_new_tokens)
         self.environment = environment
         self.all_generations = [] # list of tuples of (generation_type, gpt_warriors)
 

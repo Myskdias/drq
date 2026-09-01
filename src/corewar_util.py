@@ -2,7 +2,7 @@ from dataclasses import dataclass
 import random
 import numpy as np
 from tqdm import tqdm
-from multiprocessing import Pool
+from multiprocessing import get_context
 
 from corewar import MARS, Core, redcode
 
@@ -88,7 +88,9 @@ def _run_battle_task(task):
 def run_battle_batch(simargs, battles, seeds, n_processes=1, timeout=900):
     seeds = list(seeds)
     tasks = [(simargs, warriors, seed) for warriors in battles for seed in seeds]
-    with Pool(processes=n_processes) as pool:
+    # DRQ may initialize CUDA for the direct Hugging Face backend before
+    # launching simulator workers. `spawn` avoids inheriting that CUDA runtime.
+    with get_context("spawn").Pool(processes=n_processes) as pool:
         result = pool.map_async(_run_battle_task, tasks)
         outputs = result.get(timeout=timeout)
 

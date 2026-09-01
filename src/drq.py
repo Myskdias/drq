@@ -55,7 +55,9 @@ class Args:
     gpt_model: str = "gpt-4.1-mini-2025-04-14" # The GPT model to use
     temperature: float = 1.0
     llm_seed: int = 0
+    llm_backend: str = "openai" # "openai" or "huggingface"
     llm_base_url: str | None = None # OpenAI-compatible local endpoint, e.g. vLLM
+    llm_max_new_tokens: int = 4096 # Hugging Face generation limit
     system_prompt: str = os.path.expanduser("./prompts/system_prompt_0.txt")
     new_prompt: str = os.path.expanduser("./prompts/new_prompt_0.txt")
     mutate_prompt: str = os.path.expanduser("./prompts/mutate_prompt_0.txt")
@@ -114,7 +116,8 @@ class Main:
 
         self.corewar_gpt = CorewarGPT(args.gpt_model, system_prompt, new_warrior_prompt, mutate_warrior_prompt,
                                       temperature=args.temperature, environment=simargs_to_environment(args.simargs),
-                                      seed=args.llm_seed, base_url=args.llm_base_url)
+                                      seed=args.llm_seed, base_url=args.llm_base_url,
+                                      backend=args.llm_backend, max_new_tokens=args.llm_max_new_tokens)
 
         self.init_opps = []
         for file in args.initial_opps:
@@ -277,4 +280,3 @@ class Main:
 if __name__ == "__main__":
     main = Main(tyro.cli(Args))
     main.run()
-    

@@ -183,6 +183,16 @@ cd src
 python drq.py --seed=0 --save_dir="./drq_run_0/drq_seed=0"              --n_processes=20 --resume=True --job_timeout=36000 --simargs.rounds=20 --simargs.size=8000 --simargs.cycles=80000 --simargs.processes=8000 --simargs.length=100 --simargs.distance=100 --timeout=900 --initial_opps "../human_warriors/imp.red"              --n_rounds=20 --n_iters=250 --log_every=20 --last_k_opps=20 --sample_new_percent=0.1 --bc_axes="tsp,mc" --warmup_with_init_opps=True --warmup_with_past_champs=True --n_init=8 --n_mutate=1 --fitness_threshold=0.8 --single_cell=False --gpt_model="gpt-4.1-mini-2025-04-14" --temperature=1.0 --system_prompt="./prompts/system_prompt_0.txt" --new_prompt="./prompts/new_prompt_0.txt" --mutate_prompt="./prompts/mutate_prompt_0.txt"
 ```
 
+To run Qwen3-Coder directly from a model already downloaded on one H100, use the
+Hugging Face backend. Loading is strictly offline (`local_files_only=True`):
+
+```bash
+# From the repository root:
+python -m pip install -r requirements-huggingface.txt
+cd src
+python drq.py --llm_backend=huggingface --gpt_model="/path/to/Qwen3-Coder-30B-A3B-Instruct" --llm_max_new_tokens=4096 [other DRQ arguments]
+```
+
 ### Our Dataset of Discovered Warriors
 Coming soon!
 
