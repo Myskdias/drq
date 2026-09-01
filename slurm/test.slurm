@@ -24,7 +24,7 @@ MODEL_PATH="/lustre/fsn1/projects/rech/imi/uqv56xi/models/Qwen/Qwen3-Coder-30B-A
 # ------------------------------------------------------------------
 
 # Conda
-s#ource /lustre/fsn1/projects/rech/imi/uqv56xi/conda/etc/profile.d/conda.sh
+#source /lustre/fsn1/projects/rech/imi/uqv56xi/conda/etc/profile.d/conda.sh
 module purge
 module load arch/h100
 module load python/3.12.2
@@ -107,8 +107,7 @@ for i, warrior in enumerate(warriors):
         print(f"{i}: VALID - {warrior.warrior.name}")
     else:
         print(f"{i}: INVALID - {warrior.error}")
-
-print()
+  print()
 print(f"VALIDITY: {valid}/8 = {valid / 8:.1%}")
 
 if valid < 6:
