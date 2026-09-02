@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=c6-rerank-root2
+#SBATCH --job-name=c6-rerank-root3
 #SBATCH --time=02:00:00
 #SBATCH --output=/lustre/fsn1/projects/rech/imi/uqv56xi/drq/slurm_logs/%x-%j.out
 #SBATCH --error=/lustre/fsn1/projects/rech/imi/uqv56xi/drq/slurm_logs/%x-%j.err
@@ -17,7 +17,7 @@ set -x
 echo "=== JOB $SLURM_JOB_ID start on $(hostname) at $(date) ==="
 
 REPO_ROOT="/lustre/fsn1/projects/rech/imi/uqv56xi/drq"
-RUN_DIR="$REPO_ROOT/data/c6_root_2"
+RUN_DIR="$REPO_ROOT/data/c6_root_3"
 HUMAN_DIR="$REPO_ROOT/human_warriors"
 
 module purge
