@@ -165,6 +165,24 @@ def new_round_records(all_rounds: dict[int, Any], i_round: int) -> list[Any]:
     ]
 
 
+def executable_signature(warrior: Any) -> tuple[Any, ...]:
+    """Identify a parsed warrior by the Redcode that can affect a battle."""
+    return (
+        warrior.start,
+        tuple(
+            (
+                instruction.opcode,
+                instruction.modifier,
+                instruction.a_mode,
+                instruction.a_number,
+                instruction.b_mode,
+                instruction.b_number,
+            )
+            for instruction in warrior.instructions
+        ),
+    )
+
+
 def ranked_candidates(all_rounds: dict[int, Any], i_round: int) -> list[Any]:
     by_id = {}
     for warrior in new_round_records(all_rounds, i_round):
@@ -173,7 +191,17 @@ def ranked_candidates(all_rounds: dict[int, Any], i_round: int) -> list[Any]:
         previous = by_id.get(warrior.id)
         if previous is None or warrior.fitness > previous.fitness:
             by_id[warrior.id] = warrior
-    return sorted(by_id.values(), key=lambda warrior: warrior.fitness, reverse=True)
+
+    ranked = sorted(by_id.values(), key=lambda warrior: warrior.fitness, reverse=True)
+    distinct = []
+    seen_signatures = set()
+    for candidate in ranked:
+        signature = executable_signature(candidate.warrior)
+        if signature in seen_signatures:
+            continue
+        seen_signatures.add(signature)
+        distinct.append(candidate)
+    return distinct
 
 
 def load_human_pool(
@@ -361,7 +389,9 @@ def audit_round(
     records = new_round_records(all_rounds, i_round)
     candidates = ranked_candidates(all_rounds, i_round)
     if len(candidates) < 2:
-        raise ValueError(f"Round {i_round + 1} has fewer than two valid distinct candidates")
+        raise ValueError(
+            f"Round {i_round + 1} has fewer than two valid semantically distinct candidates"
+        )
     candidate_a, candidate_b = candidates[:2]
 
     if len(drq_args.initial_opps) != 1:
