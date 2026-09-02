@@ -21,7 +21,8 @@ RUN_DIR="$REPO_ROOT/data/c6_root_2"
 HUMAN_DIR="$REPO_ROOT/human_warriors"
 
 module purge
-module load python/3.12.2
+module load miniforge/24.9.0
+source "$(conda info --base)/etc/profile.d/conda.sh"
 
 conda activate drq
 
