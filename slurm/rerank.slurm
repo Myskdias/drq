@@ -17,7 +17,7 @@ set -x
 echo "=== JOB $SLURM_JOB_ID start on $(hostname) at $(date) ==="
 
 REPO_ROOT="/lustre/fsn1/projects/rech/imi/uqv56xi/drq"
-RUN_DIR="$REPO_ROOT/runs/c6_root_2"
+RUN_DIR="$REPO_ROOT/data/c6_root_2"
 HUMAN_DIR="$REPO_ROOT/human_warriors"
 
 module purge
